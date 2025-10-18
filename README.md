@@ -1,5 +1,5 @@
 # BCI_lab
-We are a research team from the School of Computer Science and Engineering, Software Engineering, and Artificial Intelligence at Southeast University, Nanjing, China. We mainly focus on EEG-BCI signal processing and decoding algorithms, and this repository contains most of our preparation works.
+We are a research team from [the School of Computer Science and Engineering, Software Engineering, and Artificial Intelligence, Southeast University](https://cse.seu.edu.cn/), Nanjing, China. We mainly focus on EEG-BCI signal processing and decoding algorithms, and this repository contains most of our preparation works.
 
 The files `EEGNet_orig.py` and others include implementations of several classical network architectures [1, 2, 3, 4] using [PyTorch](https://github.com/pytorch/pytorch). Notice that `EEG_residual.py` is modified based on `EEG_deep.py` [3]. The files `train_P300.py` and others provide the training and validation framework, using `P300` and `BCI Competition IV 2a` datasets provided by [MOABB](https://github.com/NeuroTechX/moabb).
 
