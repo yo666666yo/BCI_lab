@@ -1,2 +1,12 @@
 # BCI_lab
-Classical network implementations and adjustments for EEG decoding tasks
+We are a research team from the School of Computer Science and Engineering, Software Engineering, and Artificial Intelligence at Southeast University, Nanjing, China. We mainly focus on EEG-BCI signal processing and decoding algorithms, and this repository contains most of our preparation works.
+
+The files `EEGNet_orig.py` and others include implementations of several classical network architectures [1, 2, 3, 4] using [PyTorch](https://github.com/pytorch/pytorch). Notice that `EEG_residual.py` is modified based on `EEG_deep.py` [3]. The files `train_P300.py` and others provide the training and validation framework, using `P300` and `BCI Competition IV 2a` datasets provided by [MOABB](https://github.com/NeuroTechX/moabb).
+
+Most of our works were conducted on [Google Colab](https://colab.research.google.com), where provides a built-in Jupyter Notebook environment. The file `EEG_TCNet.ipynb` shows a sample of actual execution and outputs.
+
+References:
+[1] EEGNet: A compact convolutional neural network for EEG-based brain–computer interfaces
+[2] EEG-based brain-computer interface enables real-time robotic hand control at individual finger level
+[3] Deep learning with convolutional neural networks for EEG decoding and visualization
+[4] EEG-TCNet: An Accurate Temporal Convolutional Network for Embedded Motor-Imagery Brain–Machine Interfaces
