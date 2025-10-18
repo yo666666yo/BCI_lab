@@ -6,7 +6,11 @@ The files `EEGNet_orig.py` and others include implementations of several classic
 Most of our works were conducted on [Google Colab](https://colab.research.google.com), where provides a built-in Jupyter Notebook environment. The file `EEG_TCNet.ipynb` shows a sample of actual execution and outputs.
 
 References:
+
 [1] EEGNet: A compact convolutional neural network for EEG-based brain–computer interfaces
+
 [2] EEG-based brain-computer interface enables real-time robotic hand control at individual finger level
+
 [3] Deep learning with convolutional neural networks for EEG decoding and visualization
+
 [4] EEG-TCNet: An Accurate Temporal Convolutional Network for Embedded Motor-Imagery Brain–Machine Interfaces
