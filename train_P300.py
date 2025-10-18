@@ -4,11 +4,12 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from moabb import datasets
 from moabb.paradigms import P300
 from collections import Counter
 import numpy as np
-from EEGNet_finger import EEGNet
+from EEGNet_new import EEGNet
 
 dataset = datasets.BNCI2014_009()
 paradigm = P300()
@@ -37,7 +38,7 @@ for test_subj in subjects:
     weights = torch.tensor([1.0 / nontarget_ratio, 1.0 / target_ratio]).to(device)
     criterion = nn.CrossEntropyLoss(weight=weights)
 
-    # Normalization
+    # normalization
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train.reshape(X_train.shape[0], -1)).reshape(X_train.shape)
     X_val = scaler.transform(X_val.reshape(X_val.shape[0], -1)).reshape(X_val.shape)
@@ -46,17 +47,17 @@ for test_subj in subjects:
     X_train = X_train[:, np.newaxis, :, :]
     X_val = X_val[:, np.newaxis, :, :]
 
-    # To tensor
+    # to tensor
     X_train = torch.FloatTensor(X_train)
     y_train = torch.LongTensor(y_train)
     X_val = torch.FloatTensor(X_val)
     y_val = torch.LongTensor(y_val)
 
-    # Data loader
+    # data loader
     train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=128, shuffle=True)
     val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=128, shuffle=False)
     
-    # Initialize model with correct parameters
+    # initialize model with correct parameters
     model = EEGNet(n_class=2, channels=C, samples=T).to(device)
     
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -118,7 +119,6 @@ epochs_range = range(1, num_epochs + 1)
 for i, (loss_h, val_h) in enumerate(zip(all_loss_shistories, all_val_acc_histories)):
     ax1.plot(epochs_range, loss_h, color=colors[i], label=f'Subject {subjects[i]}')
     ax2.plot(epochs_range, val_h, color=colors[i], label=f'Subject {subjects[i]}')
-import matplotlib.ticker as ticker
 ax1.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax2.xaxis.set_major_locator(ticker.MultipleLocator(2))
 ax1.set_title('Training Loss')
