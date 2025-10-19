@@ -15,9 +15,8 @@ class EEGTransform(nn.Module):
         if x.dim() == 1:
             x = x.unsqueeze(0).unsqueeze(0)  # (1,1,T)
         elif x.dim() == 2:
-            # could be (C, T) or (B, T). Disambiguate: if first dim > second (common electrodes)
             if x.size(0) <= x.size(1):
-                # assume (C, T)
+                # (C, T)
                 x = x.unsqueeze(0)  # (1, C, T)
             else:
                 x = x.unsqueeze(1)  # (B, 1, T)
@@ -59,7 +58,7 @@ class PatchEmbed(nn.Module):
         num_patches = self.grid_size[0] * self.grid_size[1]
         self.num_patches = num_patches
         self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
-        self.flatten = nn.Flatten(2)  # flatten spatial -> seq dim
+        self.flatten = nn.Flatten(2) 
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.proj(x)  # (B, embed_dim, gh, gw)
@@ -203,31 +202,3 @@ class ViT_EEG(nn.Module):
         cls_token = x[:, 0]  # (B, D)
         logits = self.head(cls_token)  # (B, num_classes)
         return logits
-
-
-def build_vit_s(img_size=(224,224), patch_size=(16,16), num_classes=2):
-	return ViT_EEG(img_size=img_size,
-                   patch_size=patch_size,
-                   in_chans=1,
-                   embed_dim=768,
-                   depth=12,
-                   num_heads=12,
-                   mlp_ratio=3072/768,
-                   num_classes=num_classes,
-                   dropout=0.1,
-                   attn_dropout=0.1)
-
-
-def build_vit_l(img_size=(224,224), patch_size=(16,16), num_classes=2):
-	return ViT_EEG(img_size=img_size,
-                   patch_size=patch_size,
-                   in_chans=1,
-                   embed_dim=1024,
-                   depth=24,
-                   num_heads=16,
-                   mlp_ratio=4096/1024,
-                   num_classes=num_classes,
-                   dropout=0.1,
-                   attn_dropout=0.1)
-
-
