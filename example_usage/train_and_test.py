@@ -8,7 +8,7 @@ from moabb.paradigms import MotorImagery
 from collections import Counter
 import numpy as np
 import warnings
-
+from implementation import _EEG_TCNet
 warnings.filterwarnings('ignore')
 
 def train_and_save_model(n_classes=5):
@@ -30,139 +30,134 @@ def train_and_save_model(n_classes=5):
         print(f"Subject: {test_subj}")
         print(f"{'='*50}")
         train_subs = [s for s in subjects if s != test_subj]
-        
-        try:
-            X_train, y_train, _ = paradigm.get_data(dataset=dataset, subjects=train_subs)
-            X_val, y_val, _ = paradigm.get_data(dataset=dataset, subjects=[test_subj])
-            
-            print(f"train data shape: {X_train.shape}")
-            print(f"val data shape: {X_val.shape}")
-            print(f"train label distribute: {Counter(y_train)}")
-            print(f"val label distribute: {Counter(y_val)}")
 
-            le = LabelEncoder()
-            y_train = le.fit_transform(y_train)
-            y_val = le.transform(y_val)
-            class_names = le.classes_
-            print(f"class: {class_names}")
-            print(f"class len: {len(class_names)}")
-            class_counts = Counter(y_train)
-            total_samples = len(y_train)
-            weights = torch.tensor([total_samples / (len(class_counts) * class_counts[i]) for i in range(len(class_counts))]).to(device)
-            criterion = nn.CrossEntropyLoss(weight=weights)
+        X_train, y_train, _ = paradigm.get_data(dataset=dataset, subjects=train_subs)
+        X_val, y_val, _ = paradigm.get_data(dataset=dataset, subjects=[test_subj])
             
-            print(f"class weight: {weights.cpu().numpy()}")
-            
-            # normalization
-            scaler = StandardScaler()
-            X_train_reshaped = X_train.reshape(X_train.shape[0], -1)
-            X_train = scaler.fit_transform(X_train_reshaped).reshape(X_train.shape)
-            X_val_reshaped = X_val.reshape(X_val.shape[0], -1)
-            X_val = scaler.transform(X_val_reshaped).reshape(X_val.shape)
-            
-            # reshape
-            C, T = X_train.shape[1], X_train.shape[2]  # (C, T)
-            n_classes_actual = len(np.unique(y_train))
-            
-            print(f"channels: {C}, time points: {T}, number of classes: {n_classes_actual}")
+        print(f"train data shape: {X_train.shape}")
+        print(f"val data shape: {X_val.shape}")
+        print(f"train label distribute: {Counter(y_train)}")
+        print(f"val label distribute: {Counter(y_val)}")
 
-            X_train = X_train[:, np.newaxis, :, :]  # (trials, 1, channels, time)
-            X_val = X_val[:, np.newaxis, :, :]
+        le = LabelEncoder()
+        y_train = le.fit_transform(y_train)
+        y_val = le.transform(y_val)
+        class_names = le.classes_
+        print(f"class: {class_names}")
+        print(f"class len: {len(class_names)}")
+        class_counts = Counter(y_train)
+        total_samples = len(y_train)
+        weights = torch.tensor([total_samples / (len(class_counts) * class_counts[i]) for i in range(len(class_counts))]).to(device)
+        criterion = nn.CrossEntropyLoss(weight=weights)
             
-            X_train = torch.FloatTensor(X_train)
-            y_train = torch.LongTensor(y_train)
-            X_val = torch.FloatTensor(X_val)
-            y_val = torch.LongTensor(y_val)
-            train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=64, shuffle=True)
-            val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=64, shuffle=False)
+        print(f"class weight: {weights.cpu().numpy()}")
             
-            # model initialize
-            model = _EEG_TCNet(n_chan=C, n_cls=n_classes_actual).to(device)
-            print(f"model size: {sum(p.numel() for p in model.parameters())}")
-            optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-            scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
-            num_epochs = 30
-            best_val_acc = 0
-            best_model_state = None
+        # normalization
+        scaler = StandardScaler()
+        X_train_reshaped = X_train.reshape(X_train.shape[0], -1)
+        X_train = scaler.fit_transform(X_train_reshaped).reshape(X_train.shape)
+        X_val_reshaped = X_val.reshape(X_val.shape[0], -1)
+        X_val = scaler.transform(X_val_reshaped).reshape(X_val.shape)
             
-            # train
-            for epoch in range(num_epochs):
-                model.train()
-                train_loss = 0.0
-                correct = 0
-                total = 0
+        # reshape
+        C, T = X_train.shape[1], X_train.shape[2]  # (C, T)
+        n_classes_actual = len(np.unique(y_train))
+            
+        print(f"channels: {C}, time points: {T}, number of classes: {n_classes_actual}")
+
+        X_train = X_train[:, np.newaxis, :, :]  # (trials, 1, channels, time)
+        X_val = X_val[:, np.newaxis, :, :]
+            
+        X_train = torch.FloatTensor(X_train)
+        y_train = torch.LongTensor(y_train)
+        X_val = torch.FloatTensor(X_val)
+        y_val = torch.LongTensor(y_val)
+        train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=64, shuffle=True)
+        val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=64, shuffle=False)
+            
+        # model initialize
+        model = _EEG_TCNet(n_chan=C, n_cls=n_classes_actual).to(device)
+        print(f"model size: {sum(p.numel() for p in model.parameters())}")
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+        num_epochs = 30
+        best_val_acc = 0
+        best_model_state = None
+            
+        # train
+        for epoch in range(num_epochs):
+            model.train()
+            train_loss = 0.0
+            correct = 0
+            total = 0
                 
-                for batch_x, batch_y in train_loader:
-                    batch_x, batch_y = batch_x.to(device), batch_y.to(device)
-                    optimizer.zero_grad()
-                    outputs = model(batch_x)
-                    loss = criterion(outputs, batch_y)
-                    loss.backward()
-                    optimizer.step()
+            for batch_x, batch_y in train_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                optimizer.zero_grad()
+                outputs = model(batch_x)
+                loss = criterion(outputs, batch_y)
+                loss.backward()
+                optimizer.step()
                     
-                    train_loss += loss.item()
-                    _, predicted = torch.max(outputs.data, 1)
-                    total += batch_y.size(0)
-                    correct += (predicted == batch_y).sum().item()
-                scheduler.step()
+                train_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                total += batch_y.size(0)
+                correct += (predicted == batch_y).sum().item()
+            scheduler.step()
                 
-                avg_train_loss = train_loss / len(train_loader)
-                train_acc = 100 * correct / total
+            avg_train_loss = train_loss / len(train_loader)
+            train_acc = 100 * correct / total
                 
-                # val
-                model.eval()
-                val_preds, val_true = [], []
-                with torch.no_grad():
-                    for batch_x, batch_y in val_loader:
-                        batch_x, batch_y = batch_x.to(device), batch_y.to(device)
-                        outputs = model(batch_x)
-                        _, preds = torch.max(outputs, 1)
-                        val_preds.extend(preds.cpu().numpy())
-                        val_true.extend(batch_y.cpu().numpy())
-                
-                val_acc = accuracy_score(val_true, val_preds)
-                
-                # save best model
-                if val_acc > best_val_acc:
-                    best_val_acc = val_acc
-                    best_model_state = model.state_dict().copy()
-                
-                if (epoch + 1) % 5 == 0:
-                    print(f"Epoch {epoch+1}/{num_epochs} - "
-                          f"Loss: {avg_train_loss:.4f}, "
-                          f"Train Acc: {train_acc:.2f}%, "
-                          f"Val Acc: {val_acc:.4f}, "
-                          f"LR: {scheduler.get_last_lr()[0]:.6f}")
-            if best_model_state is not None:
-                model.load_state_dict(best_model_state)
-            
+            # val
             model.eval()
-            final_preds, final_true = [], []
+            val_preds, val_true = [], []
             with torch.no_grad():
                 for batch_x, batch_y in val_loader:
                     batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                     outputs = model(batch_x)
                     _, preds = torch.max(outputs, 1)
-                    final_preds.extend(preds.cpu().numpy())
-                    final_true.extend(batch_y.cpu().numpy())
+                    val_preds.extend(preds.cpu().numpy())
+                    val_true.extend(batch_y.cpu().numpy())
+                
+            val_acc = accuracy_score(val_true, val_preds)
+                
+            # save best model
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                best_model_state = model.state_dict().copy()
+                
+            if (epoch + 1) % 5 == 0:
+                print(f"Epoch {epoch+1}/{num_epochs} - "
+                        f"Loss: {avg_train_loss:.4f}, "
+                        f"Train Acc: {train_acc:.2f}%, "
+                        f"Val Acc: {val_acc:.4f}, "
+                        f"LR: {scheduler.get_last_lr()[0]:.6f}")
+        if best_model_state is not None:
+            model.load_state_dict(best_model_state)
             
-            final_val_acc = accuracy_score(final_true, final_preds)
-            cm = confusion_matrix(final_true, final_preds)
-            all_results.append(final_val_acc)
-            subject_performances[test_subj] = {
-                'accuracy': final_val_acc,
-                'confusion_matrix': cm,
-                'class_names': class_names,
-                'n_classes': n_classes_actual
-            }
+        model.eval()
+        final_preds, final_true = [], []
+        with torch.no_grad():
+            for batch_x, batch_y in val_loader:
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+                outputs = model(batch_x)
+                _, preds = torch.max(outputs, 1)
+                final_preds.extend(preds.cpu().numpy())
+                final_true.extend(batch_y.cpu().numpy())
             
-            print(f"\nSubject: {test_subj} final results:")
-            print(f"best val_acc: {best_val_acc:.4f}")
-            print(classification_report(final_true, final_preds, target_names=class_names))
+        final_val_acc = accuracy_score(final_true, final_preds)
+        cm = confusion_matrix(final_true, final_preds)
+        all_results.append(final_val_acc)
+        subject_performances[test_subj] = {
+            'accuracy': final_val_acc,
+            'confusion_matrix': cm,
+            'class_names': class_names,
+            'n_classes': n_classes_actual
+        }
             
-        except Exception as e:
-            print(f"exception occured when processing subject {test_subj}: {e}")
-            continue
+        print(f"\nSubject: {test_subj} final results:")
+        print(f"best val_acc: {best_val_acc:.4f}")
+        print(classification_report(final_true, final_preds, target_names=class_names))
 
     print(f"\n{'='*60}")
     print("Total Information")

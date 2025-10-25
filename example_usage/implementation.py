@@ -7,7 +7,7 @@ from sklearn.decomposition import FastICA
 import pickle
 from scipy import interpolate, signal
 
-class _TCN_ResidualBlock(nn.Module):
+class _TCN_ResidualBlock(nn.Module): # using EEGTCNet as an usage example
     def __init__(self, in_channels, out_channels, kernel_size, dilation, dropout):
         super(_TCN_ResidualBlock, self).__init__()
         self.dilation = dilation
@@ -126,48 +126,37 @@ class HiddenBCIModel:
         self._is_trained = False
         
     def load_weights(self, model_path: str):
-        try:
-            try:
-                checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
-            except TypeError:
-                checkpoint = torch.load(model_path, map_location='cpu')
-            except Exception as e:
-                print("reloading...")
-                with open(model_path, 'rb') as f:
-                    checkpoint = pickle.load(f)
-            if 'model_state_dict' in checkpoint:
-                self.model.load_state_dict(checkpoint['model_state_dict'])
-            else:
-                self.model.load_state_dict(checkpoint)
-                
-            self.model.eval()
-            self._is_trained = True
-            if 'n_channels' in checkpoint:
-                self.n_channels = checkpoint['n_channels']
-            if 'n_times' in checkpoint:
-                self.n_times = checkpoint['n_times']
-            if 'n_classes' in checkpoint:
-                self.n_classes = checkpoint['n_classes']
-            if 'sampling_rate' in checkpoint:
-                self.sampling_rate = checkpoint['sampling_rate']
-            if 'scaler_params' in checkpoint:
-                scaler_params = checkpoint['scaler_params']
-                self.scaler.mean_ = scaler_params['mean']
-                self.scaler.var_ = scaler_params['var']
-                self.scaler.scale_ = scaler_params['scale']
-                self.scaler.n_samples_seen_ = scaler_params['n_samples_seen']
-                
-        except Exception as e:
-            raise RuntimeError(f"weight load fail: {str(e)}")
     
+        checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
+            
+        if 'model_state_dict' in checkpoint:
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            self.model.load_state_dict(checkpoint)
+                
+        self.model.eval()
+        self._is_trained = True
+        if 'n_channels' in checkpoint:
+            self.n_channels = checkpoint['n_channels']
+        if 'n_times' in checkpoint:
+            self.n_times = checkpoint['n_times']
+        if 'n_classes' in checkpoint:
+            self.n_classes = checkpoint['n_classes']
+        if 'sampling_rate' in checkpoint:
+            self.sampling_rate = checkpoint['sampling_rate']
+        if 'scaler_params' in checkpoint:
+            scaler_params = checkpoint['scaler_params']
+            self.scaler.mean_ = scaler_params['mean']
+            self.scaler.var_ = scaler_params['var']
+            self.scaler.scale_ = scaler_params['scale']
+            self.scaler.n_samples_seen_ = scaler_params['n_samples_seen']
+                
+
     def predict(self, eeg_data: np.ndarray) -> np.ndarray:
-        if not self._is_trained:
-            raise RuntimeError("model is not trained")
         eeg_tensor = self._preprocess_data(eeg_data)
         with torch.no_grad():
             outputs = self.model(eeg_tensor)
             probabilities = torch.softmax(outputs, dim=1).numpy()
-            
         return probabilities
     
     def _preprocess_data(self, eeg_data: np.ndarray) -> torch.Tensor:
