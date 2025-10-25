@@ -1,0 +1,10 @@
+# ignoring pycache and model weight file
+__pycache__/
+*.pyc
+*.pth
+
+# ignoring vscode and temp files
+.vscode/
+*.log
+*.tmp
+
