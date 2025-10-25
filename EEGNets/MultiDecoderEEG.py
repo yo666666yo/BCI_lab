@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-class TCN_ResidualBlock(nn.Module):
+class TCN_ResidualBlock(nn.Module): # temporal convolutional network from EEGTCNet
     def __init__(self,
             in_chan, out_chan, K, dilation, dropout):
         super(TCN_ResidualBlock, self).__init__()
@@ -50,7 +50,7 @@ class TCN_ResidualBlock(nn.Module):
         x = self.conv2(x)
         return x + residual
 
-class EEGEncoder(nn.Module):
+class EEGEncoder(nn.Module): # a general encoder using TCNet architecture
     def __init__(self,
             n_chan, F, F_T, K_T, T, L=2):
         self.conv_1 = nn.Sequential(
@@ -174,9 +174,9 @@ class EEGEncoder(nn.Module):
             x = tcn_block(x)
         return x
 
-class Decoder(nn.Module):
+class DecoderTemplate(nn.Module): # decoder for single task
     def __init__(self,
-            n_cls=5, dropout=0.5):
+            n_cls, dropout):
         self.flat = nn.Flatten()
         self.fc = nn.LazyLinear(n_cls)
         self.norm = nn.BatchNorm2d(n_cls)
@@ -187,3 +187,34 @@ class Decoder(nn.Module):
         x = self.fc(x)
         x = self.drop(x)
         return x
+
+class MultiDecoderEEG(nn.Module):
+    def __init__(self,
+            n_chan, n_cls_list=[3, 5], # 3 for force & speed classification, 5 for direction classification
+            F=128, F_T=64, K_T=3, T=256, L=2, dropout=0.5):
+        super(MultiDecoderEEG, self).__init__()
+        self.encoder = EEGEncoder(
+            n_chan=n_chan,
+            F=F,
+            F_T=F_T,
+            K_T=K_T,
+            T=T,
+            L=L
+        )
+        self.decoders = nn.ModuleList()
+        for n_cls in n_cls_list:
+            self.decoders.append(
+                DecoderTemplate(
+                    n_cls=n_cls,
+                    dropout=dropout
+                )
+            )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        outputs = []
+        for decoder in self.decoders:
+            outputs.append(decoder(x))
+        return outputs
+    
+
