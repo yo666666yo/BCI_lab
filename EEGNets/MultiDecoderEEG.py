@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torch.nn import functional as f
+from torch.nn import functional as F
 
 class TCN_ResidualBlock(nn.Module):
     def __init__(self,
@@ -14,7 +14,7 @@ class TCN_ResidualBlock(nn.Module):
             nn.Conv2d(
                 in_chan,
                 out_chan,
-                kernel_size=(1, kernel_size),
+                kernel_size=(1, self.kernel_size),
                 dilation=(1, dilation)
             ),
             nn.BatchNorm2d(out_chan),
@@ -26,7 +26,7 @@ class TCN_ResidualBlock(nn.Module):
             nn.Conv2d(
                 out_chan,
                 out_chan,
-                kernel_size=(1, kernel_size),
+                kernel_size=(1, self.kernel_size),
                 dilation=(1, dilation)
             ),
             nn.BatchNorm2d(out_chan),
@@ -166,17 +166,17 @@ class EEGEncoder(nn.Module):
             )
 
     def forward(self, x):
-        x = f.elu(self.conv_1(x) + self.short_1(x))
-        x = f.elu(self.conv_2(x) + self.short_2(x))
-        x = f.elu(self.conv_3(x) + self.short_3(x))
-        x = f.elu(self.conv_4(x) + self.short_4(x))
+        x = F.elu(self.conv_1(x) + self.short_1(x))
+        x = F.elu(self.conv_2(x) + self.short_2(x))
+        x = F.elu(self.conv_3(x) + self.short_3(x))
+        x = F.elu(self.conv_4(x) + self.short_4(x))
         for tcn_block in self.tcn_blocks:
             x = tcn_block(x)
         return x
 
 class Decoder(nn.Module):
     def __init__(self,
-            n_cls=5, dropout):
+            n_cls=5, dropout=0.5):
         self.flat = nn.Flatten()
         self.fc = nn.LazyLinear(n_cls)
         self.norm = nn.BatchNorm2d(n_cls)
