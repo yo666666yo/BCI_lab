@@ -34,6 +34,7 @@ for test_subj in subjects:
     total_samples = len(y_train)
     weights = torch.tensor([1.0 / class_counts[i] for i in range(len(class_counts))]).to(device)
     criterion = nn.CrossEntropyLoss(weight=weights)
+    # normalization
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train.reshape(X_train.shape[0], -1)).reshape(X_train.shape)
     X_val = scaler.transform(X_val.reshape(X_val.shape[0], -1)).reshape(X_val.shape)

@@ -81,7 +81,9 @@ for test_subj in subjects:
             optimizer.step()
             train_loss += loss.item()
         avg_train_loss = train_loss / len(train_loader)
-        loss_history.append(avg_train_loss)            
+        loss_history.append(avg_train_loss)
+
+        # val    
         model.eval()
         val_preds, val_true = [], []
         with torch.no_grad():
@@ -110,6 +112,7 @@ for i, acc in enumerate(all_results, start=1):
     print(f"Subject {i}: {acc:.4f}")
 print(f"Mean Acc: {mean_acc:.4f} ± {std_acc:.4f}")
 
+# visualization
 plt.rcParams['font.sans-serif'] = ['Arial']
 plt.rcParams['axes.unicode_minus'] = False
 
