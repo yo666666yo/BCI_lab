@@ -53,6 +53,7 @@ class TCN_ResidualBlock(nn.Module): # temporal convolutional network from EEGTCN
 class EEGEncoder(nn.Module): # a general encoder using TCNet architecture
     def __init__(self,
             n_chan, F, F_T, K_T, T, L=2):
+        super(EEGEncoder, self).__init__()
         self.conv_1 = nn.Sequential(
                 nn.Conv2d(
                     1,
@@ -157,9 +158,9 @@ class EEGEncoder(nn.Module): # a general encoder using TCNet architecture
             in_channels = F if i == 0 else F_T
             self.tcn_blocks.append(
                 TCN_ResidualBlock(
-                    in_channels=in_channels,
-                    out_channels=F_T,
-                    kernel_size=K_T,
+                    in_chan=in_channels,
+                    out_chan=F_T,
+                    K=K_T,
                     dilation=dilation,
                     dropout=0.25
                 )
@@ -177,6 +178,7 @@ class EEGEncoder(nn.Module): # a general encoder using TCNet architecture
 class DecoderTemplate(nn.Module): # decoder for single task
     def __init__(self,
             n_cls, dropout):
+        super(DecoderTemplate, self).__init__()
         self.flat = nn.Flatten()
         self.fc = nn.LazyLinear(n_cls)
         self.norm = nn.BatchNorm2d(n_cls)
