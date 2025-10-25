@@ -43,21 +43,26 @@ for test_subj in subjects:
     n_classes = len(np.unique(y_train))
     X_train = X_train[:, np.newaxis, :, :]
     X_val = X_val[:, np.newaxis, :, :]
+
+    # to tensor
     X_train = torch.FloatTensor(X_train)
     y_train = torch.LongTensor(y_train)
     X_val = torch.FloatTensor(X_val)
     y_val = torch.LongTensor(y_val)
     train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=128, shuffle=True)
     val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=128, shuffle=False)
+
+    # initialization
     model = ResEEG(n_chan=C, n_cls=n_classes, F=8, T=T).to(device)
     
+    # training settings
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     num_epochs = 20
     best_val_acc = 0
-    
     loss_history = []
     val_acc_history = []
 
+    # train & test
     for epoch in range(num_epochs):
         model.train()
         train_loss = 0.0
@@ -74,6 +79,7 @@ for test_subj in subjects:
         avg_train_loss = train_loss / len(train_loader)
         loss_history.append(avg_train_loss)
         
+        # val
         model.eval()
         val_preds, val_true = [], []
         with torch.no_grad():
@@ -102,6 +108,7 @@ for i, acc in enumerate(all_results, start=1):
     print(f"Subject {i}: {acc:.4f}")
 print(f"Mean Acc: {mean_acc:.4f} ± {std_acc:.4f}")
 
+# visualization
 plt.rcParams['font.sans-serif'] = ['Arial']
 plt.rcParams['axes.unicode_minus'] = False
 
