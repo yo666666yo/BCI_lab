@@ -4,11 +4,12 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+from pathlib import Path
 from moabb import datasets
 from moabb.paradigms import MotorImagery
 from collections import Counter
 import numpy as np
-from EEGNet_residual import ResEEG
+from EEGNets.EEGNet_residual import ResEEG
 
 dataset = datasets.BNCI2014_001()
 paradigm = MotorImagery()
@@ -127,4 +128,8 @@ ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 ax2.grid(True)
 
 plt.tight_layout()
+subfloder = Path("result_imgs")
+subfloder.mkdir(parents=True, exist_ok=True)
+plt.savefig(subfloder / "EEG_residual_Competition_IV.png")
+
 plt.show()

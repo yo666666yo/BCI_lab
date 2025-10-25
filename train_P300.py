@@ -5,11 +5,12 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from pathlib import Path
 from moabb import datasets
 from moabb.paradigms import P300
 from collections import Counter
 import numpy as np
-from EEGNet_new import EEGNet
+from EEGNets.EEGNet_new import EEGNet
 
 dataset = datasets.BNCI2014_009()
 paradigm = P300()
@@ -116,7 +117,7 @@ colors = plt.cm.Set3(np.linspace(0, 1, len(subjects)))
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
 epochs_range = range(1, num_epochs + 1)
 
-for i, (loss_h, val_h) in enumerate(zip(all_loss_shistories, all_val_acc_histories)):
+for i, (loss_h, val_h) in enumerate(zip(all_loss_histories, all_val_acc_histories)):
     ax1.plot(epochs_range, loss_h, color=colors[i], label=f'Subject {subjects[i]}')
     ax2.plot(epochs_range, val_h, color=colors[i], label=f'Subject {subjects[i]}')
 ax1.xaxis.set_major_locator(ticker.MultipleLocator(2))
@@ -134,4 +135,8 @@ ax2.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 ax2.grid(True)
 
 plt.tight_layout()
+subfloder = Path("result_imgs")
+subfloder.mkdir(parents=True, exist_ok=True)
+plt.savefig(subfloder / "EEG_new_P300.png")
+
 plt.show()
