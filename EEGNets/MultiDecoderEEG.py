@@ -189,34 +189,3 @@ class DecoderTemplate(nn.Module): # decoder for single task
         x = self.fc(x)
         x = self.drop(x)
         return x
-
-class MultiDecoderEEG(nn.Module):
-    def __init__(self,
-            n_chan, n_cls_list=[3, 5], # 3 for force & speed classification, 5 for direction classification
-            F=128, F_T=64, K_T=3, T=256, L=2, dropout=0.5):
-        super(MultiDecoderEEG, self).__init__()
-        self.encoder = EEGEncoder(
-            n_chan=n_chan,
-            F=F,
-            F_T=F_T,
-            K_T=K_T,
-            T=T,
-            L=L
-        )
-        self.decoders = nn.ModuleList()
-        for n_cls in n_cls_list:
-            self.decoders.append(
-                DecoderTemplate(
-                    n_cls=n_cls,
-                    dropout=dropout
-                )
-            )
-
-    def forward(self, x):
-        x = self.encoder(x)
-        outputs = []
-        for decoder in self.decoders:
-            outputs.append(decoder(x))
-        return outputs
-    
-
