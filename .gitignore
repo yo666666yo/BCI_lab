@@ -14,6 +14,9 @@ __pycache__/
 # IDE settings
 .idea/
 
+# private slides (not shared publicly)
+slides/
+
 # LaTeX build artifacts
 *.aux
 *.fls
