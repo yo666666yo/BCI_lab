@@ -8,3 +8,21 @@ __pycache__/
 *.log
 *.tmp
 
+# virtual environments
+.venv/
+
+# IDE settings
+.idea/
+
+# LaTeX build artifacts
+*.aux
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.toc
+*.xdv
+*.out
+*.synctex.gz
+*.bbl
+*.blg
